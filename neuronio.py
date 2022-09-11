@@ -1,43 +1,43 @@
 #import math
 #import random
-import time # marcar tempo de execucao
+import time # marcar tempo de execução
 
-# ------ parametros inicias --------------------------
+# ------ parâmetros inicias --------------------------
 
 # ENTRADAS
 meu_ru = 3935883 
 rus = [meu_ru, 4074152, 3926164, 4081405, 3642026, 4388971, 4406012, 4167501, 3566092, 4020888,
          3809658, 3707103, 4692810, 4917018, 3298518, 4471155, 4109148, 3873621, 3753152, 4193731] # lista que armazena RUs geradas, comecando ja com meu RU
 
-# O bloco de codigo abaixo foi utilizado para gerar os RUs na lista acima
+# O bloco de código abaixo foi utilizado para gerar os RUs na lista acima
 """random.seed(10) # parametro impede a geracao de novos valores em cada execucao
 for i in range(0, gerar):  # gerar RUs aleatoreamente, acima e abaixo do valor da minha RU
     gerar_ru = math.ceil(random.triangular(3000000, 5000000)) # gerar ru e arrendondar os valores float
     rus.append(gerar_ru)
 """
 # PESOS
-peso_inicial = 1    # o peso escolhido por padrao foi 1
+peso_inicial = 1
 
-# VIES
-bias = 0 # o vies escolhido por padrao foi 0
+# VIÉS
+bias = 0
 
-# ATIVADORES (tanh)
+# ATIVADORES
 a = 1
 b = -1
 
 # TAXA DE APRENDIZADO
 k = 0.01
 
-# classificacao humana
+# classificação humana
 classificacao = [1,1,-1,1,-1,1,1,1,-1,1,-1,-1,1,1,-1,1,1,-1,-1,1]
 
 
 
-# ------ Perceptron --------------------------------
+# ------ NEURÕNIO ---------------------------------------------------------
 
 def perceptron(dados, peso_inicial, bias, alvos, taxa):
 
-    inicio = time.time() # marca inicio
+    inicio = time.time() # marca início
     k = taxa
     passo = 0 # contador de passos do loop de aprendizado
 
@@ -47,8 +47,6 @@ def perceptron(dados, peso_inicial, bias, alvos, taxa):
         for d in str(dado):
             entrada.append(int(d))
         entradas[c+1] = entrada
-
-    print('entradas {}'.format(entradas))
 
     pesos = []
     
@@ -72,7 +70,7 @@ def perceptron(dados, peso_inicial, bias, alvos, taxa):
                         s = x * w + bias # funcao input
                         soma.append(s) 
 
-                    saidas[chave] = sum(soma) # somar e salvar no dicionario
+                    saidas[chave] = sum(soma) # somar e salvar no dicionário
 
                 return saidas
 
@@ -99,25 +97,28 @@ def perceptron(dados, peso_inicial, bias, alvos, taxa):
                 for chave, atual, alvo in zip(atuais.keys(), atuais.values(), alvos):
                     erro = atual - alvo
                     erros[chave] = erro
-                
+
                 # calcular e acumular deltas
                 deltas_totais = {}
                 for chave, erro, entrada in zip(erros.keys(), erros.values(), entradas.values()):
                     deltas = []
                     for x in entrada:
                         delta = erro * x * k
-                        deltas.append(delta)                        
+                        deltas.append(delta)
                     deltas_totais[chave] = deltas
 
-                # calcular media de dos deltas
-                medias = []
-                for chave, delta in zip(deltas_totais.keys(), deltas_totais.values()):
-                    media_deltas = round(sum(delta)/len(delta), 2)
-                    medias.append(media_deltas)
-                
+                # calcular media dos deltas para cada peso
+                media_deltas = []
+                for n in range(len(pesos)):
+                    delta_temp = []
+                    for chave, delta in deltas_totais.items():  
+                        delta_temp.append(delta[n])
+                    media = round(sum(delta_temp)/len(delta_temp), 2)
+                    media_deltas.append(media)
+
                 # calcular pesos ajustados
                 pesos_ajustados = []
-                for peso, media in zip(pesos, medias):
+                for peso, media in zip(pesos, media_deltas):
                     pesos_ajustados.append(round(peso - media, 2))
                 
                 # ajustar pesos
@@ -137,9 +138,8 @@ def perceptron(dados, peso_inicial, bias, alvos, taxa):
 
             for chave, valor, saida, atual, alvo, erro, delta in zip(entradas.keys(), entradas.values(), 
                     saidas.values(), atuais.values(), alvos, erros.values(), deltas.values()):
-                print('Entrada {}: {} | saida: {} | atual: {} | alvo: {}| erro: {} | deltas: {}'
-                        .format(chave, valor, round(saida, 2), atual, alvo, erro, delta))
-            
+                print(f'Entrada {chave}: {valor} | saida: {round(saida, 2)} | atual: {atual} | alvo: {alvo}| erro: {erro} | deltas: {delta}')
+                        
             somar_erros = []
             for erro in erros.values():
                 somar_erros.append(erro)
@@ -149,7 +149,6 @@ def perceptron(dados, peso_inicial, bias, alvos, taxa):
             # interromper o aprendizado quando todos a soma dos erros zerar
             if sum(somar_erros) == 0:
                 break
-
             else:
                 pass
 
@@ -160,6 +159,10 @@ def perceptron(dados, peso_inicial, bias, alvos, taxa):
         # performance
         finally:
             fim = time.time()
-            print('TOTAL DE PASSOS: {} | TEMPO: {} s'.format(passo, fim - inicio))
+            print(f'TOTAL DE PASSOS: {passo} | TEMPO: {fim - inicio} s')
+    
+    return pesos
 
-perceptron(rus, peso_inicial, bias, classificacao, k)
+pesos = perceptron(rus, peso_inicial, bias, classificacao, k)
+
+print(f'PESOS FINAIS: {pesos}')
